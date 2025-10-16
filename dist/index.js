@@ -26,7 +26,7 @@ function a(r, ...e) {
     const c = l.querySelector(`[_sam_fragment_to_call_${s}]`);
     c == null || c.removeAttribute(`_sam_fragment_to_call_${s}`);
     const d = i[s];
-    if (typeof d == "function") d();
+    if (typeof d == "function") d(c);
     else for (const [_, b] of Object.entries(i[s]))
       _ == "init" ? b(c) : c == null || c.addEventListener(_, b);
   }

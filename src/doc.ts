@@ -70,7 +70,7 @@ export function html(strings: TemplateStringsArray, ...values: any): DocumentFra
         const target= fragment.querySelector(`[_sam_fragment_to_call_${i}]`)
         target?.removeAttribute(`_sam_fragment_to_call_${i}`)
         const events = functions_to_call[i]
-        if(typeof events==="function") events()
+        if(typeof events==="function") events(target)
         else for(const [key, value] of Object.entries(functions_to_call[i])){
             if(key=="init")value(target)
             else target?.addEventListener(key, value)
