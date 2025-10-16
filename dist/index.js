@@ -1,50 +1,55 @@
 var y = Object.defineProperty;
-var w = (s, e, t) => e in s ? y(s, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : s[e] = t;
-var h = (s, e, t) => w(s, typeof e != "symbol" ? e + "" : e, t);
-function g(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+var w = (r, e, t) => e in r ? y(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
+var h = (r, e, t) => w(r, typeof e != "symbol" ? e + "" : e, t);
+function g(r) {
+  return r.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-function a(s, ...e) {
+function a(r, ...e) {
   let t = "", n = [], i = [];
-  function o(r) {
-    if (r != null) if (r instanceof Node)
-      t += `<span id="_sam_frament_target_${n.length}"></span>`, n.push(r);
-    else if (typeof r == "string") t += g(r);
-    else if (typeof r[Symbol.iterator] == "function")
-      for (const c of r) o(c);
-    else typeof r == "function" ? o(r()) : t += g("" + r);
+  function o(s) {
+    if (s != null) if (s instanceof Node)
+      t += `<span id="_sam_frament_target_${n.length}"></span>`, n.push(s);
+    else if (typeof s == "string") t += g(s);
+    else if (typeof s[Symbol.iterator] == "function")
+      for (const c of s) o(c);
+    else typeof s == "function" ? o(s()) : t += g("" + s);
   }
-  for (let r = 0; r < e.length; r++)
-    s[r].endsWith("@") && (typeof e[r] == "function" || typeof e[r] == "object") ? (t += s[r].slice(0, -1), t += `_sam_fragment_to_call_${i.length}=sam`, i.push(e[r])) : (t += s[r], o(e[r]));
-  t += s[s.length - 1];
+  for (let s = 0; s < e.length; s++)
+    r[s].endsWith("@") && (typeof e[s] == "function" || typeof e[s] == "object") ? (t += r[s].slice(0, -1), t += `_sam_fragment_to_call_${i.length}=sam`, i.push(e[s])) : (t += r[s], o(e[s]));
+  t += r[r.length - 1];
   const l = document.createRange().createContextualFragment(t);
-  for (let r = 0; r < n.length; r++) {
-    const c = l.getElementById(`_sam_frament_target_${r}`);
-    c == null || c.replaceWith(n[r]);
+  for (let s = 0; s < n.length; s++) {
+    const c = l.getElementById(`_sam_frament_target_${s}`);
+    c == null || c.replaceWith(n[s]);
   }
-  for (let r = 0; r < i.length; r++) {
-    const c = l.querySelector(`[_sam_fragment_to_call_${r}]`);
-    c == null || c.removeAttribute(`_sam_fragment_to_call_${r}`);
-    const d = i[r];
+  for (let s = 0; s < i.length; s++) {
+    const c = l.querySelector(`[_sam_fragment_to_call_${s}]`);
+    c == null || c.removeAttribute(`_sam_fragment_to_call_${s}`);
+    const d = i[s];
     if (typeof d == "function") d();
-    else for (const [_, b] of Object.entries(i[r]))
+    else for (const [_, b] of Object.entries(i[s]))
       _ == "init" ? b(c) : c == null || c.addEventListener(_, b);
   }
   return l;
 }
-a.opt = function(s, ...e) {
+a.opt = function(r, ...e) {
   if (!(e.includes(null) || e.includes(void 0)))
-    return a(s, ...e);
+    return a(r, ...e);
 };
-a.not_empty = function(s, ...e) {
+a.not_empty = function(r, ...e) {
   if (!e.every((t) => t == null || t.length && t.length === 0))
-    return a(s, ...e);
+    return a(r, ...e);
 };
-a.a = function(s, ...e) {
-  return a(s, ...e).firstElementChild;
+a.a = function(r, ...e) {
+  return a(r, ...e).firstElementChild;
 };
-function $(s, e = document) {
-  return e.querySelector(s);
+function $(...r) {
+  const e = document.createDocumentFragment();
+  for (const t of r) e.appendChild(t);
+  return e;
+}
+function C(r, e = document) {
+  return e.querySelector(r);
 }
 class f {
   constructor(e) {
@@ -154,8 +159,8 @@ class x {
     for (let e of this.sources) e.unregister(this.listener);
   }
 }
-function V(s, e) {
-  return new x(s, e);
+function V(r, e) {
+  return new x(r, e);
 }
 class m {
   /**
@@ -343,7 +348,7 @@ class q extends E {
     return e({ from: this._value, to: this._value }), this.observable.add(e);
   }
 }
-class C extends v {
+class F extends v {
   constructor(t, n, i, o) {
     super();
     h(this, "observable");
@@ -386,8 +391,8 @@ class I extends m {
     this.decorated.unregister(e);
   }
 }
-function j(s, e) {
-  return new I(s, e);
+function j(r, e) {
+  return new I(r, e);
 }
 class z {
   constructor() {
@@ -415,7 +420,7 @@ export {
   z as CancellableOSource,
   f as FriendlyIterable,
   S as MOArray,
-  C as MOAutoMap,
+  F as MOAutoMap,
   W as MOMap,
   q as MOValue,
   x as MultiListener,
@@ -428,7 +433,8 @@ export {
   E as OValue,
   m as Observable,
   g as escapeHtml,
-  $ as get,
+  $ as fragment,
+  C as get,
   a as html,
   V as listen_all,
   j as startWith

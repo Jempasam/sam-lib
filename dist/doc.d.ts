@@ -19,3 +19,9 @@ export declare namespace html {
     var not_empty: (strings: TemplateStringsArray, ...values: any) => DocumentFragment | undefined;
     var a: (strings: TemplateStringsArray, ...values: any) => HTMLElement;
 }
+/**
+ * Create a html fragment from a list of elements.
+ * @param elements
+ * @returns A document fragment containing the elements.
+ */
+export declare function fragment(...elements: Element[]): DocumentFragment;

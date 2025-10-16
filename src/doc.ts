@@ -100,3 +100,14 @@ html.not_empty= function(strings: TemplateStringsArray, ...values: any): Documen
 html.a= function(strings: TemplateStringsArray, ...values: any): HTMLElement{
     return html(strings, ...values).firstElementChild as HTMLElement
 }
+
+/**
+ * Create a html fragment from a list of elements.
+ * @param elements 
+ * @returns A document fragment containing the elements.
+ */
+export function fragment(...elements: Element[]): DocumentFragment {
+    const frag= document.createDocumentFragment()
+    for(const el of elements) frag.appendChild(el)
+    return frag
+}
