@@ -1,17 +1,34 @@
+export interface HtmlTemplateComponent {
+    readonly element: Node;
+    setTemplateAttr(name: string, value: string): boolean;
+}
 export declare function escapeHtml(unsafe: string): string;
 /**
- * Create a document fragment from a template string.
- * Node are inserted as is, other values are escaped as string.
- * Iterables are expanded.
- * Undefined and null values are ignored.
- * Function are called.
+ * Create a document fragment from a template string. With the following rules.
  *
- * If in a start balise of an element, a function placeholder is preceded by a "@" character,
- * the function will be called with the element as argument, after the element is created.
+ * Most of the time :
+ * - **undefined** and **null** values are ignored
+ * - A **string** is inlined and html escaped
+ * - A **{@link Node}** is inserted as is
+ * - An **{@link Iterable}** is expanded
+ * - An object with a {@link HtmlTemplateComponent#element} member, its element is inserted as is
+ * - A **{@link Function}** is called and its result is processed according to these rules
+ * - Other is stringified and treated as a **string**
  *
- * If in a start balise of an element, a object placeholder is preceded by a "@" character,
- * their key-value of event name-function will be registred to the element. A custom "init" event
- * is called once directly after the element is created.
+ * When just after a "<" character (for element name) :
+ * - **undefined** and **null** values are ignored, and the element is removed
+ * - A **string** is inlined and html escaped
+ * - A **{@link Element}** is inserted as is, the following attributes and children are transfered to it
+ * - An object with a {@link HtmlTemplateComponent#element} member, its element treated like a {@link Element}
+ * - An **{@link Iterable}** is expanded
+ * - A **{@link Function}** is called and its result is processed according to these rules
+ * If multiple element are placed, only the first element take the following childrens
+ *
+ * When just after a "@" character (for special element value) in a element opening balise :
+ * - **undefined** and **null** values are ignored
+ * - An **{@link Iterable}** is expanded
+ * - A **{@link Function}** is called with the element as argument, after the element is created.
+ * - An **{@link Object}** will have its key-value pairs registred as event listeners on the element. A custom "init" event
  **/
 export declare function html(strings: TemplateStringsArray, ...values: any): DocumentFragment;
 export declare namespace html {

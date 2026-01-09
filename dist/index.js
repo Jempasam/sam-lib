@@ -1,57 +1,123 @@
-var y = Object.defineProperty;
-var w = (r, e, t) => e in r ? y(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
-var h = (r, e, t) => w(r, typeof e != "symbol" ? e + "" : e, t);
-function g(r) {
+var I = Object.defineProperty;
+var M = (r, e, t) => e in r ? I(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
+var a = (r, e, t) => M(r, typeof e != "symbol" ? e + "" : e, t);
+function w(r) {
   return r.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-function a(r, ...e) {
-  let t = "", n = [], i = [];
-  function o(s) {
-    if (s != null) if (s instanceof Node)
-      t += `<span id="_sam_frament_target_${n.length}"></span>`, n.push(s);
-    else if (typeof s == "string") t += g(s);
-    else if (typeof s[Symbol.iterator] == "function")
-      for (const c of s) o(c);
-    else typeof s == "function" ? o(s()) : t += g("" + s);
+function m(r, ...e) {
+  let t = 0, s = "", i = {};
+  function c(n, l) {
+    n in i || (i[n] = []), i[n].push(l);
   }
-  for (let s = 0; s < e.length; s++)
-    r[s].endsWith("@") && (typeof e[s] == "function" || typeof e[s] == "object") ? (t += r[s].slice(0, -1), t += `_sam_fragment_to_call_${i.length}=sam`, i.push(e[s])) : (t += r[s], o(e[s]));
-  t += r[r.length - 1];
-  const l = document.createRange().createContextualFragment(t);
-  for (let s = 0; s < n.length; s++) {
-    const c = l.getElementById(`_sam_frament_target_${s}`);
-    c == null || c.replaceWith(n[s]);
+  function f(n) {
+    if (n != null) if (n instanceof Node) {
+      var l = `_sam_frament_target_${t++}`;
+      s += `<span ${l}=""></span>`, c(l, (o) => o.replaceWith(n));
+    } else if (typeof n == "object" && "element" in n)
+      f(n.element);
+    else if (typeof n == "string") s += w(n);
+    else if (typeof n[Symbol.iterator] == "function")
+      for (const o of n) f(o);
+    else typeof n == "function" ? f(n()) : s += w("" + n);
   }
-  for (let s = 0; s < i.length; s++) {
-    const c = l.querySelector(`[_sam_fragment_to_call_${s}]`);
-    c == null || c.removeAttribute(`_sam_fragment_to_call_${s}`);
-    const d = i[s];
-    if (typeof d == "function") d(c);
-    else for (const [_, b] of Object.entries(i[s]))
-      _ == "init" ? b(c) : c == null || c.addEventListener(_, b);
+  function g(n, l) {
+    if (n != null) if (n instanceof Element)
+      l.push((o) => {
+        for (let h = 0; h < o.attributes.length; h++) {
+          const u = o.attributes.item(h);
+          n.attributes.setNamedItem(u.cloneNode());
+        }
+        for (; o.firstChild; ) n.appendChild(o.firstChild);
+        o.before(n);
+      });
+    else if (typeof n == "object" && "element" in n && n.element instanceof Element) {
+      const o = n, h = o.element;
+      l.push((u) => {
+        for (let y = 0; y < u.attributes.length; y++) {
+          const _ = u.attributes.item(y);
+          (!o.setTemplateAttr || !o.setTemplateAttr(_.name, _.value)) && h.attributes.setNamedItem(_.cloneNode());
+        }
+        for (; u.firstChild; ) h.appendChild(u.firstChild);
+        u.before(h);
+      });
+    } else if (typeof n == "string") s += w(n);
+    else if (typeof n[Symbol.iterator] == "function")
+      for (const o of n) g(o, l);
+    else if (typeof n == "function") g(n(), l);
+    else throw new Error("Invalid type to be placed as an element: " + typeof n);
   }
-  return l;
+  function v(n, l) {
+    if (n != null) if (typeof n[Symbol.iterator] == "function")
+      for (const o of n) v(o, l);
+    else if (typeof n == "function") l.push(n);
+    else if (typeof n == "object")
+      l.push((o) => {
+        for (const [h, u] of Object.entries(n))
+          if (typeof u == "function")
+            h == "init" ? l.push(u) : o.addEventListener(h, u);
+          else throw new Error("Invalid event listener for @ placeholder: " + h);
+      });
+    else throw new Error("Invalid type to be placed as an element: " + typeof n);
+  }
+  function x(n) {
+    return n.replace("</>", "</div>");
+  }
+  const O = {};
+  try {
+    for (let n = 0; n < e.length; n++)
+      if (r[n].endsWith("<")) {
+        const l = `_sam_frament_to_remove_${t++}`;
+        s += r[n] + `div ${l} `;
+        const o = [];
+        O[l] = o, g(e[n], o);
+      } else if (r[n].endsWith("@")) {
+        s += r[n];
+        const l = `_sam_frament_callback_${t++}`;
+        s += ` ${l}="" `;
+        const o = i[l] ?? [];
+        i[l] = o, v(e[n], o);
+      } else
+        s += x(r[n]), f(e[n]);
+    s += x(r[r.length - 1]);
+  } catch (n) {
+    const l = s.length < 20 ? s : s.slice(-20, -1);
+    throw new Error(`[${l}...] : ${n != null && typeof n == "object" && "message" in n ? n.message : n}`);
+  }
+  const b = document.createRange().createContextualFragment(s);
+  for (const [n, l] of Object.entries(O)) {
+    const o = b.querySelector(`[${n}]`);
+    o.removeAttribute(n);
+    for (const h of l) h(o);
+    o.remove();
+  }
+  for (const [n, l] of Object.entries(i)) {
+    let o = b.querySelector(`[${n}]`);
+    for (const h of l)
+      o.parentNode || (o = b.getElementById(n)), h(o);
+    o.removeAttribute(n);
+  }
+  return b;
 }
-a.opt = function(r, ...e) {
+m.opt = function(r, ...e) {
   if (!(e.includes(null) || e.includes(void 0)))
-    return a(r, ...e);
+    return m(r, ...e);
 };
-a.not_empty = function(r, ...e) {
-  if (!e.every((t) => t == null || t.length && t.length === 0))
-    return a(r, ...e);
+m.not_empty = function(r, ...e) {
+  if (!e.every((t) => t == null || (t == null ? void 0 : t.length) === 0))
+    return m(r, ...e);
 };
-a.a = function(r, ...e) {
-  return a(r, ...e).firstElementChild;
+m.a = function(r, ...e) {
+  return m(r, ...e).firstElementChild;
 };
-function $(...r) {
+function F(...r) {
   const e = document.createDocumentFragment();
   for (const t of r) e.appendChild(t);
   return e;
 }
-function C(r, e = document) {
+function T(r, e = document) {
   return e.querySelector(r);
 }
-class f {
+class p {
   constructor(e) {
     this.iterable = e;
   }
@@ -61,8 +127,8 @@ class f {
   /** Performs the specified action for each element in an array. */
   forEach(e) {
     let t = 0;
-    for (let n of this.iterable)
-      e(n, t), t++;
+    for (let s of this.iterable)
+      e(s, t), t++;
   }
   /**
    * Returns the value of the first element of the iterator where predicate is true, and undefined
@@ -73,8 +139,8 @@ class f {
    */
   find(e) {
     let t = 0;
-    for (let n of this.iterable) {
-      if (e(n, t)) return n;
+    for (let s of this.iterable) {
+      if (e(s, t)) return s;
       t++;
     }
   }
@@ -87,8 +153,8 @@ class f {
    */
   findIndex(e) {
     let t = 0;
-    for (let n of this.iterable) {
-      if (e(n, t)) return t;
+    for (let s of this.iterable) {
+      if (e(s, t)) return t;
       t++;
     }
     return -1;
@@ -112,7 +178,7 @@ class f {
    * @param predicate A function that accepts up to two arguments. every calls the predicate function for each element of the iterator until the predicate returns false, or until the end of the iterator.
    */
   every(e) {
-    return this.findIndex((t, n) => !e(t, n)) == -1;
+    return this.findIndex((t, s) => !e(t, s)) == -1;
   }
   /**
    * Returns a new iterator that contains the elements of the original iterator that satisfy the specified predicate.
@@ -120,9 +186,9 @@ class f {
    */
   map(e) {
     const t = [];
-    let n = 0;
+    let s = 0;
     for (let i of this.iterable)
-      t.push(e(i, n)), n++;
+      t.push(e(i, s)), s++;
     return t;
   }
   /**
@@ -130,11 +196,11 @@ class f {
    * @param callbackfn A function that accepts up to three arguments. The reduce method calls the callbackfn function one time for each element in the iterator.
    */
   reduce(e) {
-    let t = 0, n;
+    let t = 0, s;
     for (let i of this.iterable)
-      n == null ? n = i : n = e(n, i, t), t++;
-    if (n == null) throw new Error("Reduce of empty iterator with no initial value");
-    return n;
+      s == null ? s = i : s = e(s, i, t), t++;
+    if (s == null) throw new Error("Reduce of empty iterator with no initial value");
+    return s;
   }
   /**
    * Checks if the iterable contains the specified value.
@@ -144,13 +210,13 @@ class f {
     return this.some((t) => t === e);
   }
 }
-class x {
+class $ {
   /**
    * Register multiple listeners and save them to be able to unregister them later.
    */
   constructor(e, t) {
     this.sources = e, this.listener = t;
-    for (let n of e) n.register(this.listener);
+    for (let s of e) s.register(this.listener);
   }
   /**
    * Unregister the listeners
@@ -159,10 +225,10 @@ class x {
     for (let e of this.sources) e.unregister(this.listener);
   }
 }
-function V(r, e) {
-  return new x(r, e);
+function z(r, e) {
+  return new $(r, e);
 }
-class m {
+class E {
   /**
    * Register an observer and return a function to unregister it.
    * @param observer The function to call on notification.
@@ -172,11 +238,11 @@ class m {
     return this.register(e), () => this.unregister(e);
   }
 }
-class u extends m {
+class d extends E {
   constructor(t = void 0) {
     super();
-    h(this, "observers", /* @__PURE__ */ new Set());
-    h(this, "depth", 0);
+    a(this, "observers", /* @__PURE__ */ new Set());
+    a(this, "depth", 0);
     this.parent = t;
   }
   /** Register an observer */
@@ -190,20 +256,20 @@ class u extends m {
   /** Send a notification to the observers */
   notify(t) {
     if (this.depth++, this.depth == 1) {
-      for (let n of this.observers) n(t);
+      for (let s of this.observers) s(t);
       this.parent && this.parent.notify(t);
     }
     this.depth = 0;
   }
 }
-class O {
+class A {
   constructor(e) {
-    h(this, "on_add");
-    h(this, "on_remove");
-    this.on_add = new u(e == null ? void 0 : e.on_add), this.on_remove = new u(e == null ? void 0 : e.on_remove);
+    a(this, "on_add");
+    a(this, "on_remove");
+    this.on_add = new d(e == null ? void 0 : e.on_add), this.on_remove = new d(e == null ? void 0 : e.on_remove);
   }
 }
-class M {
+class j {
   get length() {
     return this.content.length;
   }
@@ -214,17 +280,17 @@ class M {
     return this.content[Symbol.iterator]();
   }
   values() {
-    return new f(this.content);
+    return new p(this.content);
   }
 }
-class S extends M {
+class N extends j {
   constructor(e, t) {
-    super(), this.observable = new O(t), this.content = e ?? [];
+    super(), this.observable = new A(t), this.content = e ?? [];
   }
   /** Remove the given number of elements at the given index and add the given values at the same index */
-  splice(e, t, ...n) {
-    const i = this.content.splice(e, t, ...n);
-    return i.forEach((o, l) => this.observable.on_remove.notify({ value: o, index: e + l })), n.forEach((o, l) => this.observable.on_add.notify({ value: o, index: e + l })), i;
+  splice(e, t, ...s) {
+    const i = this.content.splice(e, t, ...s);
+    return i.forEach((c, f) => this.observable.on_remove.notify({ value: c, index: e + f })), s.forEach((c, f) => this.observable.on_add.notify({ value: c, index: e + f })), i;
   }
   /** Add the values at the end of the array */
   push(...e) {
@@ -243,13 +309,13 @@ class S extends M {
     return this.remove(this.length - 1);
   }
 }
-class p {
+class S {
   constructor(e) {
-    h(this, "on_change");
-    this.on_change = new u(e == null ? void 0 : e.on_change);
+    a(this, "on_change");
+    this.on_change = new d(e == null ? void 0 : e.on_change);
   }
 }
-class v {
+class C {
   /** Test if a key exists */
   has(e) {
     return this.content.has(e);
@@ -260,15 +326,15 @@ class v {
   }
   /** Get the entries */
   entries() {
-    return new f(this.content.entries());
+    return new p(this.content.entries());
   }
   /** Get the entries */
   keys() {
-    return new f(this.content.keys());
+    return new p(this.content.keys());
   }
   /** Get the values */
   values() {
-    return new f(this.content.values());
+    return new p(this.content.values());
   }
   /**
    * Create an observable array that is automatically updated when this observable map is updated.
@@ -276,32 +342,32 @@ class v {
    * It need to be disposed when not used anymore.
    */
   observable_values() {
-    let e = [], t = new S();
-    for (let [n, i] of this.entries()) t.push(i);
-    return t.dispose = this.observable.on_change.register(({ key: n, from: i, to: o }) => {
+    let e = [], t = new N();
+    for (let [s, i] of this.entries()) t.push(i);
+    return t.dispose = this.observable.on_change.register(({ key: s, from: i, to: c }) => {
       if (i != null)
-        if (o != null) {
-          const l = e.indexOf(n);
-          t.splice(l, 1, o);
+        if (c != null) {
+          const f = e.indexOf(s);
+          t.splice(f, 1, c);
         } else {
-          const l = e.indexOf(n);
-          e.splice(l, 1), t.splice(l, 1);
+          const f = e.indexOf(s);
+          e.splice(f, 1), t.splice(f, 1);
         }
-      else o != null && (e.push(n), t.push(o));
+      else c != null && (e.push(s), t.push(c));
     }), t;
   }
 }
-class W extends v {
+class L extends C {
   constructor(e, t) {
-    super(), this.observable = new p(t), this.content = e ?? /* @__PURE__ */ new Map();
+    super(), this.observable = new S(t), this.content = e ?? /* @__PURE__ */ new Map();
   }
   /**
    * Set or delete a value
    * @param value the value to set, or null to delete  
    */
   set_or_delete(e, t) {
-    const n = this.content.get(e) ?? null;
-    t === null ? this.content.delete(e) : this.content.set(e, t), this.observable.on_change.notify({ key: e, from: n, to: t });
+    const s = this.content.get(e) ?? null;
+    t === null ? this.content.delete(e) : this.content.set(e, t), this.observable.on_change.notify({ key: e, from: s, to: t });
   }
   /**
    * Set or delete a value
@@ -316,7 +382,7 @@ class W extends v {
     this.set_or_delete(e, null);
   }
 }
-class E {
+class W {
   /** Get the value */
   get() {
     return this._value;
@@ -326,9 +392,9 @@ class E {
     return this.get();
   }
 }
-class q extends E {
+class R extends W {
   constructor(e, t) {
-    super(), this.observable = new u(t), this._value = e;
+    super(), this.observable = new d(t), this._value = e;
   }
   /** Set the value */
   set(e) {
@@ -348,36 +414,36 @@ class q extends E {
     return e({ from: this._value, to: this._value }), this.observable.add(e);
   }
 }
-class F extends v {
-  constructor(t, n, i, o) {
+class B extends C {
+  constructor(t, s, i, c) {
     super();
-    h(this, "observable");
-    h(this, "content");
-    this.key_factory = t, this.value_factory = n, this.observable = new p(o), this.content = i ?? /* @__PURE__ */ new Map();
+    a(this, "observable");
+    a(this, "content");
+    this.key_factory = t, this.value_factory = s, this.observable = new S(c), this.content = i ?? /* @__PURE__ */ new Map();
   }
   /** Set or delete a value */
   set(t) {
-    const n = this.key_factory(t), i = this.content.get(n) ?? null;
-    this.content.set(n, t), this.observable.on_change.notify({ key: n, from: i, to: t });
+    const s = this.key_factory(t), i = this.content.get(s) ?? null;
+    this.content.set(s, t), this.observable.on_change.notify({ key: s, from: i, to: t });
   }
   /** Get a value or create it if it does not exist */
   get_or_create(t) {
-    const n = this.value_factory;
-    if (n) return this.or_compute(t, () => n(t));
+    const s = this.value_factory;
+    if (s) return this.or_compute(t, () => s(t));
     throw new Error("This auto map cannot auto create his values");
   }
   /** Get a value */
-  or_compute(t, n) {
+  or_compute(t, s) {
     let i = this.content.get(t);
-    return i === void 0 && (i = n(), this.content.set(t, i), this.observable.on_change.notify({ key: t, from: null, to: i })), i;
+    return i === void 0 && (i = s(), this.content.set(t, i), this.observable.on_change.notify({ key: t, from: null, to: i })), i;
   }
   /** Delete a value if it exists */
   delete(t) {
-    const n = this.content.get(t) ?? null;
-    this.content.delete(t), this.observable.on_change.notify({ key: t, from: n, to: null });
+    const s = this.content.get(t) ?? null;
+    this.content.delete(t), this.observable.on_change.notify({ key: t, from: s, to: null });
   }
 }
-class I extends m {
+class q extends E {
   constructor(e, t) {
     super(), this.decorated = e, this.initalizer = t, this.decorated = e, this.initalizer = t;
   }
@@ -391,14 +457,14 @@ class I extends m {
     this.decorated.unregister(e);
   }
 }
-function j(r, e) {
-  return new I(r, e);
+function D(r, e) {
+  return new q(r, e);
 }
-class z {
+class H {
   constructor() {
-    h(this, "before", new u());
-    h(this, "after", new u());
-    h(this, "cancel", new u());
+    a(this, "before", new d());
+    a(this, "after", new d());
+    a(this, "cancel", new d());
   }
   /**
    * Notify the observer and return false if the notification was cancelled
@@ -406,36 +472,36 @@ class z {
    * @param action An action to perform if the notification is not cancelled and before the after event
    * @param postaction An action to perform after the after event
    */
-  notify(e, t, n) {
+  notify(e, t, s) {
     let i = { ...e, cancel: !1 };
     if (this.before.notify(i), i.cancel)
       return this.cancel.notify(e), !1;
     {
-      let o = !1, l = t == null ? void 0 : t(() => o = !0);
-      return o || (this.after.notify(e), n == null || n(l)), !0;
+      let c = !1, f = t == null ? void 0 : t(() => c = !0);
+      return c || (this.after.notify(e), s == null || s(f)), !0;
     }
   }
 }
 export {
-  z as CancellableOSource,
-  f as FriendlyIterable,
-  S as MOArray,
-  F as MOAutoMap,
-  W as MOMap,
-  q as MOValue,
-  x as MultiListener,
-  M as OArray,
-  O as OArrayObservable,
-  v as OMap,
-  p as OMapObservable,
-  u as OSource,
-  I as OStartWith,
-  E as OValue,
-  m as Observable,
-  g as escapeHtml,
-  $ as fragment,
-  C as get,
-  a as html,
-  V as listen_all,
-  j as startWith
+  H as CancellableOSource,
+  p as FriendlyIterable,
+  N as MOArray,
+  B as MOAutoMap,
+  L as MOMap,
+  R as MOValue,
+  $ as MultiListener,
+  j as OArray,
+  A as OArrayObservable,
+  C as OMap,
+  S as OMapObservable,
+  d as OSource,
+  q as OStartWith,
+  W as OValue,
+  E as Observable,
+  w as escapeHtml,
+  F as fragment,
+  T as get,
+  m as html,
+  z as listen_all,
+  D as startWith
 };

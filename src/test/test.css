@@ -1,0 +1,82 @@
+body, html{
+    width: 100%;
+    height: fit-content;
+    margin: 0;
+    padding: 0;
+
+    --back: #a4a4a4;
+    --alt: #7b7b7b;
+    --front: #121212;
+    --success: #4bb543;
+    --error: #ff3333;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    background-color: var(--back);
+}
+
+.test_group{
+    display: flex;
+    flex-direction: column;
+    border: .5rem solid var(--alt);
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+
+    width: min(90%,30rem);
+}
+
+h2,h3{
+    margin: 0;
+    padding: 0.5rem;
+    border-bottom: .5rem solid var(--alt);
+}
+
+.test_count{
+    font-size: 1.5rem;
+    border: .5rem solid var(--alt);
+    padding: .3rem;
+    border-radius: .5rem;
+
+    display: flex;
+    flex-direction: row;
+    margin: auto;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+
+    >.current::after{
+        content: "/";
+        margin-left: .5rem;
+        margin-right: .5rem;
+    }
+}
+
+.success{
+    background-color: var(--success) !important;
+}
+
+.error{
+    background-color: var(--error) !important;
+}
+
+.test_list{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    margin: .1rem;
+    >li{
+        border: .5rem solid var(--alt);
+        margin: .2rem;
+    }
+}
+
+h3{
+    padding: .1rem;
+    font-size: .9em;
+    border-bottom-width: .2rem;
+}
